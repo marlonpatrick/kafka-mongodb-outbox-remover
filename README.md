@@ -4,8 +4,6 @@ This application is a Kafka Consumer which must consume topics that represent ra
 
 Outbox Remover is part of a pipeline which aims to implement the [Outbox Transactional Pattern](https://microservices.io/patterns/data/transactional-outbox.html) using MongoDB and Kafka.
 
-Uma vez que os dados são puxados do MongoDB para o Kafka, a função de Outbox Remover é remover os eventos presente no MongoDB Document. Assim, esse array de eventos se mantém sempre pequeno no MongoDB Document e ao ponto que a informação já se encontra no Kafka para processamento posterior no pipeline.
-
 Once the main application data is pulled from MongoDB to Kafka, including events to be consumed by other applications, the function of Outbox Remover is to remove the events present in MongoDB Document. Thus, this array of events is always kept small in MongoDB Document and while the information is already in Kafka for further processing in the pipeline.
 
 The record value must have the following minimum schema:
