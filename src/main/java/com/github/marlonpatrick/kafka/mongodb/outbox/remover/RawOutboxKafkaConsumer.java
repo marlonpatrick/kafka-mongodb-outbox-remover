@@ -22,11 +22,15 @@ import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
 class RawOutboxKafkaConsumer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RawOutboxKafkaConsumer.class);
 
     private MongoClient mongoClient;
 
@@ -58,25 +62,39 @@ class RawOutboxKafkaConsumer {
 
             String collectionName = splitedKey[1];
 
-            BulkWriteResult bulkUpdateResult = performBulkUpdate(databaseName, collectionName, updatesEntry.getValue());
-
-            System.out.println("bulkUpdateResult:");
-            System.out.println(updatesEntry.getKey());
-            System.out.println(bulkUpdateResult.getMatchedCount());
-            System.out.println(bulkUpdateResult.getModifiedCount());
-            System.out.println(bulkUpdateResult.getInsertedCount());
-            System.out.println(bulkUpdateResult.getDeletedCount());
+            performBulkUpdate(databaseName, collectionName, updatesEntry.getValue());
         }
     }
 
-    private BulkWriteResult performBulkUpdate(String databaseName, String collectionName,
+    private void performBulkUpdate(String databaseName, String collectionName,
             List<UpdateOneModel<? extends Document>> updateOperations) {
+
+        if(LOGGER.isDebugEnabled()){
+            LOGGER.debug("Performing bulk update in {}.{} with {} operations.", databaseName, collectionName, updateOperations.size());
+        }
 
         MongoDatabase mongoDatabase = mongoClient.getDatabase(databaseName);
 
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
 
-        return collection.bulkWrite(updateOperations, new BulkWriteOptions().ordered(false));
+        BulkWriteResult bulkUpdateResult = collection.bulkWrite(updateOperations, new BulkWriteOptions().ordered(false));
+
+
+        if(LOGGER.isDebugEnabled()){
+            StringBuilder bulkUpdateResultLog = new StringBuilder("Bulk update result: [");
+            bulkUpdateResultLog.append("Database: ");
+            bulkUpdateResultLog.append(databaseName);
+            bulkUpdateResultLog.append(", Collection: ");
+            bulkUpdateResultLog.append(collectionName);
+            bulkUpdateResultLog.append(", Bulk Update Size: ");
+            bulkUpdateResultLog.append(updateOperations.size());
+            bulkUpdateResultLog.append(", Matched Count: ");
+            bulkUpdateResultLog.append(bulkUpdateResult.getMatchedCount());
+            bulkUpdateResultLog.append(", Modified Count: ");
+            bulkUpdateResultLog.append(bulkUpdateResult.getModifiedCount());
+            bulkUpdateResultLog.append("]");
+            LOGGER.debug(bulkUpdateResultLog.toString());
+        }
     }
 
     private UpdateOneModel<? extends Document> buildUpdateOperation(BsonDocument recordValueDocument) {
@@ -90,8 +108,7 @@ class RawOutboxKafkaConsumer {
     private List<BsonBinary> getOutboxIds(BsonDocument recordValueDocument) {
         BsonArray outbox = recordValueDocument.getDocument("fullDocument").getArray("outbox");
 
-        return outbox.stream().map(bv -> bv.asDocument().getBinary("_id"))
-                .collect(Collectors.toList());                
+        return outbox.stream().map(bv -> bv.asDocument().getBinary("_id")).collect(Collectors.toList());
     }
 
     private BsonBinary getDocumentKey(BsonDocument recordValueDocument) {
