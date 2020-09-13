@@ -1,4 +1,4 @@
-package com.github.marlonpatrick.outbox.mongodb.kafka.remover;
+package com.github.marlonpatrick.kafka.mongodb.outbox.remover;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

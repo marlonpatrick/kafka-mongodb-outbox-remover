@@ -1,4 +1,4 @@
-package com.github.marlonpatrick.outbox.mongodb.kafka.remover;
+package com.github.marlonpatrick.kafka.mongodb.outbox.remover;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
@@ -52,11 +52,11 @@ class RawOutboxKafkaConsumer {
         for (Map.Entry<String, List<UpdateOneModel<? extends Document>>> updatesEntry : updatesByCollection
                 .entrySet()) {
 
-            String[] updateSplitedKey = updatesEntry.getKey().split("\\.");
+            String[] splitedKey = updatesEntry.getKey().split("\\.");
 
-            String databaseName = updateSplitedKey[0];
+            String databaseName = splitedKey[0];
 
-            String collectionName = updateSplitedKey[1];
+            String collectionName = splitedKey[1];
 
             BulkWriteResult bulkUpdateResult = performBulkUpdate(databaseName, collectionName, updatesEntry.getValue());
 
