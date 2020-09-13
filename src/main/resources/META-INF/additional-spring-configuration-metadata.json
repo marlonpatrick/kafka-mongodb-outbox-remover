@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "outbox.remover.kafka.consumer.topic.pattern",
+      "type": "java.lang.String",
+      "description": "Topic pattern representing all topics to be consumed."
+    }
+  ]
+}
