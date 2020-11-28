@@ -19,8 +19,8 @@ import com.mongodb.client.model.UpdateOneModel;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.bson.BsonArray;
-import org.bson.BsonBinary;
 import org.bson.BsonDocument;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ class RawOutboxKafkaConsumer {
     }
 
     @KafkaListener(topicPattern = "${outbox.remover.kafka.consumer.topic.pattern}")
-    void onMessage(List<ConsumerRecord<String, String>> records) throws Exception {
+    void onMessage(List<ConsumerRecord<String, String>> records) {
 
         Map<String, List<UpdateOneModel<? extends Document>>> updatesByCollection = new HashMap<>();
 
@@ -79,7 +79,6 @@ class RawOutboxKafkaConsumer {
 
         BulkWriteResult bulkUpdateResult = collection.bulkWrite(updateOperations, new BulkWriteOptions().ordered(false));
 
-
         if(LOGGER.isDebugEnabled()){
             StringBuilder bulkUpdateResultLog = new StringBuilder("Bulk update result: [");
             bulkUpdateResultLog.append("Database: ");
@@ -98,21 +97,28 @@ class RawOutboxKafkaConsumer {
     }
 
     private UpdateOneModel<? extends Document> buildUpdateOperation(BsonDocument recordValueDocument) {
-        BsonBinary documentKey = getDocumentKey(recordValueDocument);
+        BsonValue documentKey = getDocumentKey(recordValueDocument);
 
-        List<BsonBinary> outboxIds = getOutboxIds(recordValueDocument);
+        List<BsonValue> outboxIds = getOutboxIds(recordValueDocument);
 
         return new UpdateOneModel<>(eq("_id", documentKey), pull("outbox", in("_id", outboxIds)));
     }
 
-    private List<BsonBinary> getOutboxIds(BsonDocument recordValueDocument) {
-        BsonArray outbox = recordValueDocument.getDocument("fullDocument").getArray("outbox");
+    private List<BsonValue> getOutboxIds(BsonDocument recordValueDocument) {
 
-        return outbox.stream().map(bv -> bv.asDocument().getBinary("_id")).collect(Collectors.toList());
+        BsonArray outbox = null;
+
+        if(recordValueDocument.getString("operationType").getValue().equalsIgnoreCase("update")){
+            outbox = recordValueDocument.getDocument("updateDescription").getDocument("updatedFields").getArray("outbox");
+        }else{
+            outbox = recordValueDocument.getDocument("fullDocument").getArray("outbox");
+        }
+
+        return outbox.stream().map(bv -> bv.asDocument().get("_id")).collect(Collectors.toList());
     }
 
-    private BsonBinary getDocumentKey(BsonDocument recordValueDocument) {
-        return recordValueDocument.getDocument("documentKey").getBinary("_id");
+    private BsonValue getDocumentKey(BsonDocument recordValueDocument) {
+        return recordValueDocument.getDocument("documentKey").get("_id");
     }
 
     private List<UpdateOneModel<? extends Document>> getCollectionUpdatesList(
