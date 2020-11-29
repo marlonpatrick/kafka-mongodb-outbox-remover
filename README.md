@@ -117,7 +117,7 @@ change.stream.full.document=default
 output.format.key=schema
 
 # That message key avro format put the original document _id in the message key
-# Will generate a value like {"documentKey": {"_id": "pwZ/jvRMTVyqbXiePoNDaQ=="}}
+# Will generate a value like {"documentKey": {"_id": {"$binary": {"base64": "/lxhiTEbSE+w6e/cWd6zVg==", "subType": "04"}}}}
 output.schema.key={ "name":"DocumentKey", "type":"record", "namespace":"outbox.mongodb.avro", "fields": [ {"name": "documentKey", "type": {"name": "documentKeyField","type": "record", "fields": [ { "name":"_id","type": "string"} ] } }] }
 
 # Work's with output.json.formatter=ExtendedJson
