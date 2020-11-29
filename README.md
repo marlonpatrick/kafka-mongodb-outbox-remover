@@ -41,9 +41,9 @@ In the moment, the best way to clean up your "outbox" field is to handle that in
 
 3. In parallel, two applications will consume and process the previous topic "cdc.mongodb.outbox":
 
-   3.1. A [Kafka Streams application](https://github.com/marlonpatrick/kafka-mongodb-outbox-transformer). The output will be one message for each element in the "outbox" array field in the original document. The destination topic for each message is determined by the field "targetTopic" in the outbox message. **These output messages are the final messages ready to be consumed by others client applications/microservices.**
+   3.1. The [Outbox Transformer](https://github.com/marlonpatrick/kafka-mongodb-outbox-transformer) kafka streams application: the output will be one message for each element in the "outbox" array field in the original document. The destination topic for each message is determined by the field "targetTopic" in the outbox message. **These output messages are the final messages ready to be consumed by others client applications/microservices.**
 
-   3.2. **This Kafka Consumer application (Outbox Remover)**. the goal is to catch all outbox messages that arrived in Kafka and remove that specifics outbox messages in the corresponding MongoDB database/collection. Thus, the "outbox" array field is always kept small in MongoDB document.
+   3.2. **This Kafka Consumer application (Outbox Remover)**: the goal is to catch all outbox messages that arrived in Kafka and remove that specifics outbox messages in the corresponding MongoDB database/collection. Thus, the "outbox" array field is always kept small in MongoDB document.
 
 ## Input Message Formats
 
